@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, type ScrollViewInstance, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
@@ -21,9 +21,9 @@ import {
   Sparkles,
   Tv,
 } from 'lucide-react-native';
-import { Button, Chip, EmptyState, ErrorState, Icon, ListRow, LoadingRows, Screen, StatusPill, Text, type IconComponent } from '@/components/design-system';
+import { Chip, EmptyState, ErrorState, Icon, LoadingRows, Screen, Text, type IconComponent } from '@/components/design-system';
 import { GreetingHeader } from '@/components/shared/GreetingHeader';
-import { Group, Section, StatRow } from '@/components/shared/Layout';
+import { Section } from '@/components/shared/Layout';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { CONDITION_LABEL } from '@/domain/listings';
 import { dueLabel, summarizeBorrower } from '@/domain/rules/dashboard';
@@ -31,13 +31,13 @@ import { RoleSwitcher } from '@/features/auth/RoleSwitcher';
 import { useSession } from '@/features/auth/session';
 import { borrowerTip } from '@/features/mascot/dialogue';
 import { useListingPhotos } from '@/features/listings/useListingPhotos';
-import { formatDateOnly, todayInBusinessTz } from '@/lib/dates';
+import { todayInBusinessTz } from '@/lib/dates';
 import { ok } from '@/lib/errors';
 import { formatPeso } from '@/lib/money';
 import { useMotion } from '@/lib/motion';
 import { useAsync } from '@/lib/use-async';
 import { bookingsRepository, discoverRepository, discoveryRepository } from '@/repositories';
-import { colors, elevation, radii, spacing, typography } from '@/theme';
+import { colors, elevation, radii, spacing } from '@/theme';
 
 const CATEGORY_ICONS: Record<string, IconComponent> = {
   calculators: Calculator,
@@ -207,8 +207,10 @@ export default function BorrowerHome() {
               <EmptyState icon={Compass} title="No items yet" message="Featured equipment will appear here." />
             ) : (
               <View style={styles.spotlightWrapper}>
+                <CampusSpotlightCarousel listings={featured} photos={featuredPhotos.data ?? {}} reduceMotion={reduceMotion} />
                 <Animated.View
                   key={activeListing.id}
+                  style={styles.legacySpotlight}
                   entering={reduceMotion ? undefined : FadeIn.duration(450).easing(Easing.out(Easing.cubic))}
                   exiting={reduceMotion ? undefined : FadeOut.duration(350).easing(Easing.in(Easing.cubic))}
                   layout={reduceMotion ? undefined : LinearTransition.duration(300)}
@@ -285,6 +287,68 @@ export default function BorrowerHome() {
         </>
       )}
     </Screen>
+  );
+}
+
+type SpotlightListing = { id: string; title: string; category: string; condition: keyof typeof CONDITION_LABEL; dailyRate: number; coverPath: string | null };
+
+/** Swipeable, forward-looping carousel. The repeated first card makes the automatic return seamless. */
+function CampusSpotlightCarousel({ listings, photos, reduceMotion }: { listings: SpotlightListing[]; photos: Record<string, string>; reduceMotion: boolean }) {
+  const { width } = useWindowDimensions();
+  const cardWidth = width - spacing.lg * 2;
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const [index, setIndex] = useState(0);
+  const cards = listings.length > 1 ? [...listings, listings[0]!] : listings;
+
+  useEffect(() => {
+    if (reduceMotion || listings.length <= 1) return;
+    const timer = setInterval(() => scrollRef.current?.scrollTo({ x: (index + 1) * cardWidth, animated: true }), 4200);
+    return () => clearInterval(timer);
+  }, [cardWidth, index, listings.length, reduceMotion]);
+
+  const settle = (offset: number) => {
+    const next = Math.round(offset / cardWidth);
+    if (next >= listings.length) {
+      setIndex(0);
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ x: 0, animated: false }));
+    } else {
+      setIndex(next);
+    }
+  };
+
+  return (
+    <View style={styles.carouselShell}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(event) => settle(event.nativeEvent.contentOffset.x)}
+        accessibilityRole="adjustable"
+        accessibilityLabel="Campus Spotlight carousel"
+      >
+        {cards.map((listing, cardIndex) => {
+          const photo = listing.coverPath ? photos[listing.coverPath] : undefined;
+          return (
+            <Pressable
+              key={`${listing.id}-${cardIndex}`}
+              onPress={() => router.push({ pathname: '/explore/listing/[id]', params: { id: listing.id } })}
+              accessibilityRole="button"
+              accessibilityLabel={`${listing.title}, ${formatPeso(listing.dailyRate)} per day, ${CONDITION_LABEL[listing.condition]}`}
+              style={[styles.carouselCard, { width: cardWidth }]}
+              testID={`spotlight-${listing.id}`}
+            >
+              {photo ? <Image source={{ uri: photo }} style={styles.carouselImage} contentFit="cover" accessible={false} /> : <View style={[styles.carouselImage, styles.spotlightImageFallback]}><Icon as={ImageOff} color={colors.textFaint} /></View>}
+              <View style={styles.carouselDetails}>
+                <Text variant="bodyStrong" numberOfLines={1}>{listing.title}</Text>
+                <Text variant="subhead" tone="muted">{formatPeso(listing.dailyRate)}/day · {CONDITION_LABEL[listing.condition]}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {listings.length > 1 ? <View style={styles.carouselDots}>{listings.map((listing, dotIndex) => <View key={listing.id} style={[styles.dot, dotIndex === index && styles.activeDot]} />)}</View> : null}
+    </View>
   );
 }
 
@@ -418,6 +482,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     overflow: 'hidden',
   },
+  legacySpotlight: { display: 'none' },
+  carouselShell: { gap: spacing.sm },
+  carouselCard: { overflow: 'hidden', borderRadius: radii.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, ...elevation.low },
+  carouselImage: { width: '100%', height: 180, backgroundColor: colors.surfaceSunken },
+  carouselDetails: { minHeight: 66, justifyContent: 'center', gap: spacing.xxs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  carouselDots: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
   spotlightCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.xl,

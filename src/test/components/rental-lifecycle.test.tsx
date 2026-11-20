@@ -205,7 +205,8 @@ describe('messages', () => {
     messages.get.mockResolvedValue(ok(convo()));
     const user = userEvent.setup();
     await renderRouter(APP_DIR, { initialUrl: '/borrower/messages' });
-    expect(await screen.findByText('Leo Reyes (1 new)')).toBeOnTheScreen();
+    expect(await screen.findByText('Leo Reyes')).toBeOnTheScreen();
+    expect(screen.getByText('+1 new')).toBeOnTheScreen();
     expect(messages.list).toHaveBeenCalledWith('borrower');
     await user.press(screen.getByTestId('conversation-c1'));
     expect(screen).toHavePathname('/messages/c1');

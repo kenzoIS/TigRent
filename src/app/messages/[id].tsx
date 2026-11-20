@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Send } from 'lucide-react-native';
-import { Banner, Button, ErrorState, LoadingRows, ScreenHeader, Text, TextField } from '@/components/design-system';
+import { Banner, Button, ErrorState, LoadingRows, ScreenHeader, Text } from '@/components/design-system';
 import { formatDateOnly } from '@/lib/dates';
 import { formatDateTimeManila } from '@/lib/format';
 import { useAsync } from '@/lib/use-async';
@@ -86,10 +86,28 @@ export default function Conversation() {
               <>
                 {error ? <Banner tone="danger" title="Not sent" message={error} /> : null}
                 <View style={styles.row}>
-                  <View style={styles.flex}>
-                    <TextField label="Message" value={draft} onChangeText={setDraft} multiline maxLength={2000} placeholder="Write a message" testID="message-input" />
-                  </View>
-                  <Button label="Send" icon={Send} onPress={send} loading={sending} disabled={!draft.trim()} disabledReason={undefined} testID="send-message" />
+                  <TextInput
+                    value={draft}
+                    onChangeText={setDraft}
+                    multiline
+                    maxLength={2000}
+                    placeholder="Message"
+                    placeholderTextColor={colors.textFaint}
+                    accessibilityLabel="Message"
+                    style={styles.messageInput}
+                    testID="message-input"
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Send message"
+                    accessibilityState={{ disabled: !draft.trim() || sending }}
+                    disabled={!draft.trim() || sending}
+                    onPress={() => void send()}
+                    style={({ pressed }) => [styles.sendButton, (!draft.trim() || sending) && styles.sendButtonDisabled, pressed && styles.sendButtonPressed]}
+                    testID="send-message"
+                  >
+                    {sending ? <ActivityIndicator size="small" color={colors.surface} /> : <Send size={18} color={colors.surface} strokeWidth={2.5} />}
+                  </Pressable>
                 </View>
                 <Text variant="caption" tone="muted">Messages are private to you and {c.counterpart.fullName.split(' ')[0]}; TigRent staff may review them for support.</Text>
               </>
@@ -115,6 +133,29 @@ const styles = StyleSheet.create({
   seen: { alignSelf: 'flex-end' },
   composer: { paddingHorizontal: gutter, paddingTop: spacing.sm, gap: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, backgroundColor: colors.background },
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
+  messageInput: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 116,
+    paddingHorizontal: spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 11 : 8,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceSunken,
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 21,
+    textAlignVertical: 'center',
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.link,
+  },
+  sendButtonDisabled: { backgroundColor: colors.borderStrong },
+  sendButtonPressed: { opacity: 0.84, transform: [{ scale: 0.96 }] },
   center: { textAlign: 'center', marginTop: spacing.xl },
   flex: { flex: 1 },
 });

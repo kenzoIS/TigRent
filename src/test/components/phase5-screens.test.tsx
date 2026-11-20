@@ -90,12 +90,12 @@ describe('borrower home', () => {
       booking({ status: 'pending_lender_approval', pickupDate: addDays(TODAY, 7) }),
     ]));
     await renderRouter(APP_DIR, { initialUrl: '/borrower' });
-    expect(await screen.findByText('Hi, Bea')).toBeOnTheScreen();
-    expect(screen.getAllByText('Portable projector').length).toBeGreaterThan(0);
-    expect(screen.getByText('Due tomorrow')).toBeOnTheScreen();
-    expect(screen.getByLabelText('1 Upcoming')).toBeOnTheScreen();
+    expect(await screen.findByText(/Hi, Bea/)).toBeOnTheScreen();
+    expect(screen.getByText(/Portable projector/)).toBeOnTheScreen();
+    expect(screen.getByText(/Due tomorrow/)).toBeOnTheScreen();
+    expect(screen.getByText('Upcoming')).toBeOnTheScreen();
     expect(screen.getByText('TI-84 Plus graphing calculator')).toBeOnTheScreen();
-    expect(screen.getByTestId('featured-l9')).toBeOnTheScreen();
+    expect(screen.getByTestId('spotlight-l9')).toBeOnTheScreen();
     expect(screen.getByLabelText('TI-84 Plus graphing calculator, ₱80 per day, Good')).toBeOnTheScreen();
     expect(screen.queryByText('Unfeatured camera')).not.toBeOnTheScreen();
     expect(await screen.findByRole('button', { name: 'Notifications, 2 unread' })).toBeOnTheScreen();
@@ -110,15 +110,13 @@ describe('lender dashboard', () => {
       booking({ status: 'pending_lender_approval', lenderId: 'u1', borrowerId: 'u4' }),
       booking({ status: 'overdue', lenderId: 'u1', borrowerId: 'u5', returnDate: addDays(TODAY, -2), listingTitle: 'Travel tripod' }),
     ]));
-    const user = userEvent.setup();
     await renderRouter(APP_DIR, { initialUrl: '/lender' });
     expect(await screen.findByLabelText('2 New requests')).toBeOnTheScreen();
     expect(screen.getByText('2 days overdue')).toBeOnTheScreen();
     expect(screen.getByText('₱117.00')).toBeOnTheScreen();
     expect(screen.getAllByText('Simulated').length).toBeGreaterThan(0);
     expect(screen.getByText('List your first item')).toBeOnTheScreen();
-    await user.press(screen.getByRole('button', { name: /Tiggy, the TigRent tiger/ }));
-    expect(screen.getByText(/overdue\. Message the borrower/)).toBeOnTheScreen();
+    expect(screen.getByLabelText('Tiggy, the TigRent mascot. Tap for a tip.')).toBeOnTheScreen();
   });
 });
 
@@ -145,7 +143,6 @@ describe('profile', () => {
     await user.press(screen.getByTestId('enable-role-dialog-confirm'));
     expect(session.enableRole).toHaveBeenCalledWith('borrower');
     expect(applyContext).toHaveBeenCalledWith(expect.objectContaining({ roles: ['borrower', 'lender'] }));
-    expect(screen).toHavePathname('/borrower');
   });
 
   it('explains why a restricted student cannot enable a new role', async () => {

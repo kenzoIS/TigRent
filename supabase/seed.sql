@@ -56,8 +56,10 @@ insert into public.terms_versions (id, doc_type, version, title, is_sample, is_a
    'PROTOTYPE TEXT, NOT LEGALLY REVIEWED. TigRent is a student project prototype connecting verified students who rent academic equipment to each other. TigRent is not an official University of Santo Tomas service. Payments, refunds and payouts in this prototype are simulated and no real money moves.'),
   ('dddddddd-0000-4000-8000-000000000002', 'privacy', 1, 'TigRent Privacy Notice (prototype)', true, true,
    'PROTOTYPE TEXT, NOT LEGALLY REVIEWED. TigRent stores your name, student email, student ID and registration form only to review your student status. Documents are kept in private storage, visible only to you and authorized reviewers, and are never shown on your public profile.'),
-  ('dddddddd-0000-4000-8000-000000000003', 'rental_terms', 1, 'Standard TigRent Rental Terms (prototype)', true, true,
-   'PROTOTYPE TEXT, NOT LEGALLY REVIEWED. The borrower pays the daily rate for every day from pickup to the return date (inclusive) plus a refundable deposit. Items are due by the configured time on the return date. Late returns incur the late fee shown on the listing. Damage or missing items are handled through the TigRent dispute process.')
+  ('dddddddd-0000-4000-8000-000000000003', 'rental_terms', 1, 'Standard TigRent Rental Terms (archived)', true, false,
+   'Archived prototype rental terms. New rental requests use the active Rental Terms & Conditions version.'),
+  ('dddddddd-0000-4000-8000-000000000004', 'rental_terms', 2, 'TigRent Rental Terms & Conditions', true, true,
+   E'TIGRENT RENTAL TERMS & CONDITIONS — VERSION 2\n\n1. Scope and eligibility. TigRent connects verified students for academic-equipment rentals. TigRent is not an official University of Santo Tomas service. Each borrower and lender must use their own verified account and comply with campus rules.\n\n2. Listing and request. A listing states the item, condition, daily rate, refundable deposit, late fee, dates and pickup arrangement. A request is not confirmed until the lender accepts it and the required demo checkout is completed. The final server-confirmed price and these terms are recorded with the booking.\n\n3. Charges and deposit. The rental charge is the displayed daily rate for every calendar day from pickup through return, inclusive. The refundable deposit and any stated late fee are shown before a request is sent. Payments, refunds and payouts in this student-project demo are simulated: no real money or payment credentials are processed.\n\n4. Pickup and return. Both parties must meet at the listing’s stated public campus pickup point or another safe public location arranged in TigRent messages. The borrower should inspect the item at pickup and return it with its listed accessories by the stated due time on the return date.\n\n5. Care of equipment. The borrower must use the item with reasonable care, follow any listing instructions and must not lend, sell, alter or misuse it. The borrower should promptly tell the lender through TigRent messages if the item is damaged, lost, stolen or no longer usable.\n\n6. Cancellations, late returns and disputes. The active cancellation policy shown with the booking controls cancellation outcomes. A late return may incur the listing’s stated per-day fee. Claims about damage, missing parts, late return or non-return are handled through TigRent’s in-app dispute process using the available evidence and review workflow.\n\n7. Communication and safety. Keep arrangements in TigRent messages. Do not post phone numbers, home addresses, payment credentials or other sensitive information in listings, request notes or chat. Meet in visible public campus areas and follow UST safety rules.\n\n8. Platform action. TigRent may pause a listing, restrict an account or review activity where there is a safety concern, a terms breach, dishonest listing information or misuse of the platform.\n\n9. Demo status. These are the current operational terms for this TigRent prototype. They are not a substitute for legal advice and must receive institutional and legal review before real-world deployment.')
 on conflict (id) do nothing;
 
 insert into public.academic_years (id, label, start_date, end_date, is_current, is_archived, is_sample) values
@@ -77,12 +79,13 @@ insert into public.listing_categories (slug, label, icon, sort_order) values
 on conflict (slug) do nothing;
 
 insert into public.campus_pickup_points (id, label, description, sort_order, is_sample) values
-  ('ffffffff-0000-4000-8000-000000000001', 'Main gate waiting area', 'Sample pickup point. Meet in a public, well-lit area.', 1, true),
-  ('ffffffff-0000-4000-8000-000000000002', 'Library entrance', 'Sample pickup point.', 2, true),
-  ('ffffffff-0000-4000-8000-000000000003', 'Student center lobby', 'Sample pickup point.', 3, true),
-  ('ffffffff-0000-4000-8000-000000000004', 'Engineering building lobby', 'Sample pickup point.', 4, true),
-  ('ffffffff-0000-4000-8000-000000000005', 'Dormitory lobby (residents)', 'Sample pickup point for dormitory residents.', 5, true)
-on conflict (id) do nothing;
+  ('ffffffff-0000-4000-8000-000000000001', 'Main Gate (Gate 1)', 'Meet at the Main Gate public waiting area.', 1, false),
+  ('ffffffff-0000-4000-8000-000000000002', 'P.Noval Gate (Gate 7)', 'Meet at the P.Noval Gate public waiting area.', 2, false),
+  ('ffffffff-0000-4000-8000-000000000003', 'Lacson Gate (Gate 14)', 'Meet at the Lacson Gate public waiting area.', 3, false),
+  ('ffffffff-0000-4000-8000-000000000004', 'Dapitan Gate (Gate 11)', 'Meet at the Dapitan Gate public waiting area.', 4, false),
+  ('ffffffff-0000-4000-8000-000000000005', 'Main Building', 'Meet at the Main Building public lobby.', 5, false),
+  ('ffffffff-0000-4000-8000-000000000006', 'UST Hospital', 'Meet at the UST Hospital public lobby.', 6, false)
+on conflict (id) do update set label = excluded.label, description = excluded.description, sort_order = excluded.sort_order, is_active = true, is_sample = false;
 
 -- ── Demo accounts (auth + profile via trigger) ──────────────────────────────
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,

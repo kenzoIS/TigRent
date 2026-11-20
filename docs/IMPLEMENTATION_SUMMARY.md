@@ -10,6 +10,12 @@ Status: functional prototype complete through Phase 14 automated/live validation
 - Reviews, trust badges, low-rating account health, restrictions, account appeals and staff moderation.
 - TigRent Premium as a clearly labelled **PHP 99/month demo**, with idempotent mock checkout, ledger-backed analytics, featured placements, Premium calendar ranges and safe bulk equipment controls.
 - Versioned administrative settings, cancellation policies and staff audit history.
+- Campus Spotlight is a private-image, featured-only, swipeable and continuously auto-advancing carousel.
+- New listings require a Step 1 cover photo, uploaded through the existing private, owner-scoped storage flow before the new draft is handed off for publishing; Android picker recovery preserves a completed selection if the native picker recreates the app.
+- Lenders select the canonical campus pickup points (Main Gate/Gate 1, P.Noval/Gate 7, Lacson/Gate 14, Dapitan/Gate 11, Main Building, UST Hospital) or supply a safe custom pickup-and-return point through **Others**.
+- **Others** exposes a required field for the lender to specify the exact safe public pickup and return location.
+- Versioned Rental Terms & Conditions cover the actual prototype workflow (price, deposit, pickup/return, care, late fees, cancellation, disputes, safety and platform action), with accepted versions preserved on each booking. Institutional/legal review remains required before production.
+- Private booking chat uses a compact rounded composer with an icon-only send control sized for touch, while retaining its existing privacy and support safeguards.
 
 ## Deliberately simulated or not connected
 

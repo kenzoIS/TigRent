@@ -16,9 +16,9 @@ Source of truth: [`TigRent_Master_Implementation_Plan.md`](../TigRent_Master_Imp
 | 9 | Timeline, handover, messaging, reminders, extension, return | **Complete** (automated + live gate passed 2026-11-19; owner device check requested) |
 | 10 | Cancellation, refund, late fee, deposit, disputes | **Complete** (automated + live gate passed 2026-11-20; owner device check requested) |
 | 11 | Reviews, badges, account health, moderation | **Complete** (automated + live gate passed 2026-11-20; owner device check requested) |
-| 12 | Premium + admin configuration | **In progress** (Premium foundation deployed 2026-11-20) |
-| 13 | Visual polish, Tiggy, accessibility, devices | Not started |
-| 14 | Regression, security review, demo readiness, handoff | Not started |
+| 12 | Premium + admin configuration | **Complete** (automated + live Journey F passed 2026-11-20; owner device check requested) |
+| 13 | Visual polish, Tiggy, accessibility, devices | **Complete** (automated gate passed 2026-11-20; owner device check requested) |
+| 14 | Regression, security review, demo readiness, handoff | **Complete** (automated and live gates passed 2026-11-20; final owner handoff checks remain) |
 
 ---
 
@@ -1130,6 +1130,28 @@ Phase 11 was already implemented and deployed as migration `20261120000018_trust
 - [ ] **Owner final checks:** normal-terminal `npx expo lint`; authorized fresh demo reset; Android/iOS device performance and screenshot review.
 
 **Gate 14: automated, live and documentation handoff checks PASSED (2026-11-20); final sign-off awaits the owner device/normal-terminal checks above.**
+
+---
+
+## Post-Phase 14: Campus Spotlight, listing creation and Premium continuity (2026-11-20)
+
+### Delivered changes
+- **Campus Spotlight:** restored the touch-scrollable image carousel and changed automatic rotation from a fade-only swap to a forward-moving, paged loop. The leading card is repeated internally only to make the return to the first card seamless; only active Featured listings are queried and displayed.
+- **New listing, Step 1:** a lender must now select a clear cover photo before advancing beyond the item-details step. The new-listing submission creates the draft, uploads the selected file to the lender-scoped private folder, then registers it through the existing server-side image RPC. If either upload or registration fails, the draft and selected retry state are preserved and **Save draft** retries the unfinished operation rather than creating duplicate listings. Android picker activity recovery restores a completed selection if the system recreates the app while its native picker is open.
+- **Pickup and return:** deployed `20261120000024_campus_pickup_points.sql`. Existing stable point IDs were retained and relabelled as Main Gate (Gate 1), P.Noval Gate (Gate 7), Lacson Gate (Gate 14), Dapitan Gate (Gate 11), Main Building and UST Hospital. **Others** keeps `pickup_point_id` null and requires the existing server-validated custom pickup/return note; no unapproved location is silently converted into an approved point.
+- **Premium continuity review:** Premium remains explicitly simulated, but its entitlement is enforced in the database and connected UI: featured placement controls the Campus Spotlight source, multi-day availability blocks require Premium, bulk status operations require Premium, cancellation/expiry remove those capabilities immediately, and ledger-backed analytics remain marked simulated. Free lenders retain ordinary listings and single-day blocks.
+
+### Verification
+- Hosted migration history is applied through `20261120151139_rental_terms_v2` and generated database types are current.
+- Listing database tests pass **22/22**; focused create/listing-management UI tests pass **9/9**; Campus Spotlight/dashboard UI tests pass **11/11**; TypeScript and targeted lint pass with no errors or warnings.
+- Premium Journey F passes end to end: its demo checkout remains balanced and idempotent; entitlement-gated placement, availability, bulk controls, audit history and cancellation/expiry behaviour all pass.
+- Dashboard assertions were refreshed for the current greeting, Tiggy semantics and Campus Spotlight carousel while preserving the separate role-routing coverage.
+
+### 2026-11-20: Pickup specificity, rental terms and messaging refinement
+- **Others pickup point:** selecting **Others** now exposes a clearly named required text field, **Specify the other pickup & return point**, with an example that asks the lender to name the exact public meeting and return location. The safe custom-location validation remains intact.
+- **Rental Terms & Conditions:** deployed `20261120151139_rental_terms_v2.sql`. Version 2 is the active, substantive operational policy covering eligibility, confirmation, charges/deposit, pickup/return, care, cancellations, late returns, disputes, communication, safety and platform action. Historic bookings remain attached to the terms version accepted when they were created; new requests must accept Version 2. It is explicitly still marked for institutional and legal review before real-world deployment.
+- **Messages:** replaced the large labelled form field and text send button with a compact, familiar chat composer: a rounded multiline message field and an accessible 44px circular icon send control. Existing private-chat, booking link, error, keyboard and closed-conversation behavior is preserved.
+- **Verification:** migration status is current through `20261120151139_rental_terms_v2`; focused messaging, listing-management and booking UI tests pass **32/32**; focused booking/RLS database tests pass **45/45**; live Journey C booking flow passes end to end; TypeScript and targeted lint pass cleanly.
 
 ---
 

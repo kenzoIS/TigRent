@@ -6,6 +6,18 @@ import { __setSessionForTests } from '@/features/auth/session';
 import { AppError, fail, ok } from '@/lib/errors';
 import { listingManagementRepository, listingModerationRepository, type ListingDetail, type ListingManageRow, type SessionContext } from '@/repositories';
 
+jest.mock('expo-image-picker', () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  launchImageLibraryAsync: jest.fn(async () => ({ canceled: false, assets: [{ uri: 'file:///cover.jpg', mimeType: 'image/jpeg', fileSize: 1000 }] })),
+  launchCameraAsync: jest.fn(async () => ({ canceled: false, assets: [{ uri: 'file:///cover.jpg', mimeType: 'image/jpeg', fileSize: 1000 }] })),
+}));
+
+jest.mock('@/providers/storage/private-upload', () => ({
+  buildObjectPath: jest.fn(() => 'new-id/cover.jpg'),
+  uploadPrivateFile: jest.fn(() => ({ promise: Promise.resolve({ ok: true, data: { path: 'new-id/cover.jpg' } }), cancel: jest.fn() })),
+}));
+
 jest.mock('@/repositories', () => ({
   listingManagementRepository: {
     listMine: jest.fn(), get: jest.fn(), categories: jest.fn(), pickupPoints: jest.fn(), create: jest.fn(), update: jest.fn(),
@@ -42,6 +54,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   repo.categories.mockResolvedValue(ok([{ value: 'calculators', label: 'Calculators' }]));
   repo.pickupPoints.mockResolvedValue(ok([{ value: 'p1', label: 'Library entrance', description: 'Sample', isSample: true }]));
+  repo.addImage.mockResolvedValue(ok('image-id'));
 });
 afterAll(() => __setSessionForTests(null));
 
@@ -86,6 +99,7 @@ describe('create wizard', () => {
     await user.press(await screen.findByRole('button', { name: 'Calculators' }));
     await user.press(screen.getByRole('button', { name: 'Condition: not set' }));
     await user.press(await screen.findByRole('button', { name: /Like new/ }));
+    await user.press(screen.getByTestId('listing-photo-library'));
     await user.press(screen.getByTestId('wizard-next'));
     expect(await screen.findByText('Price and deposit')).toBeOnTheScreen();
     expect(screen.getByText(/keeps a 10% commission/)).toBeOnTheScreen();
@@ -95,6 +109,7 @@ describe('create wizard', () => {
     await user.press(await screen.findByRole('button', { name: /Library entrance/ }));
     await user.press(screen.getByTestId('wizard-submit'));
     expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ title: 'Casio fx-991EX', daily_rate: 4000, deposit: 0, late_fee_per_day: 0, pickup_point_id: 'p1' }));
+    expect(repo.addImage).toHaveBeenCalledWith('new-id', 'new-id/cover.jpg');
     expect(screen).toHavePathname('/manage/listings/new-id');
   });
 

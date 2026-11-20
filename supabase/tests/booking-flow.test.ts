@@ -277,7 +277,7 @@ describe('booking detail', () => {
     expect((d.counterpart as { id: string }).id).toBe(DEMO.leo);
     expect((d.events as unknown[]).length).toBeGreaterThanOrEqual(3);
     expect((d.payments as { status: string }[]).map((p) => p.status)).toEqual(['succeeded']);
-    expect((d.terms as { version: number }).version).toBe(1);
+    expect((d.terms as { version: number }).version).toBe(2);
   });
 });
 
