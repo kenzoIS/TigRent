@@ -1130,3 +1130,85 @@ Phase 11 was already implemented and deployed as migration `20261120000018_trust
 - [ ] **Owner final checks:** normal-terminal `npx expo lint`; authorized fresh demo reset; Android/iOS device performance and screenshot review.
 
 **Gate 14: automated, live and documentation handoff checks PASSED (2026-11-20); final sign-off awaits the owner device/normal-terminal checks above.**
+
+---
+
+## Live Revisions & Visual Polish (Post-Phase 14)
+
+### 2026-11-20: Discovery UI Refinement & Sort Control Fix
+- **Issue Reported**: Floating, orphaned `"Sort"` text in `src/app/explore/search.tsx` sticking out above the `[Filters]` button due to `SelectField` form-label nesting in a flex-end toolbar.
+- **Resolutions**:
+  - Realigned toolbar using a dedicated Sort trigger pill (`ArrowUpDown` + active label + `ChevronDown`), matching the 38pt height and geometry of `[Filters]`.
+  - Added dedicated Sort `Sheet` with clean checkmark options.
+  - Added `hideLabel` support to `TextField` for modern search header styling.
+  - Injected category Lucide icons and updated selected `Chip` styling to UST Tiger Gold (`colors.primary`) with warm elevation.
+  - Elevated `ResultRow` cards with soft shadow, golden star ratings, and vibrant status badges (`✨ Featured`, `🛡️ Trusted Lender`).
+  - Elevated Borrower Home ([src/app/borrower/index.tsx](src/app/borrower/index.tsx)) with a styled pill search hero card, category icons, and featured student listing tags.
+- **Files**: `src/app/explore/search.tsx`, `src/features/discovery/ResultRow.tsx`, `src/app/borrower/index.tsx`, `src/components/design-system/TextField.tsx`, `src/components/design-system/Chip.tsx`, `src/components/design-system/Banner.tsx`, `TigRent_Master_Implementation_Plan.md`.
+- **Checks**: `npx tsc --noEmit` pass; `npm run test:db` (16/16 suites, 202 tests pass). Live hot-reload verified on iOS device.
+
+### 2026-11-20: Discover Tab Spotlight & Tiggy Autonomous Speech Dialogue
+- **Automated "Featured from Students" Spotlight Showcase**:
+  - Replaced manual swipe carousel in `src/app/borrower/index.tsx` with an autonomous Spotlight Showcase card that auto-advances every 3.8s without manual left/right scrolling friction.
+  - Added slide indicator progress pills (`● ○ ○`), live item index badges (`Featured · 1/N`), floating price chips, category pill tag, condition status, and direct "Check Availability" call-to-action button.
+- **De-cluttered & Segmented UI/UX (Zero Wordy Text Stacks)**:
+  - Eliminated stacked paragraph text from "Your rentals", "Upcoming pickups", and "Due back next".
+  - Introduced clean visual segmentations:
+    - **Rental Overview Bento Strip**: Compact segmented grid for Active rentals, Upcoming pickups, and Pending requests with quick-glance count badges.
+    - **Compact Due-Back Banner**: Amber alert pill showing countdown to return deadline without verbose prose.
+    - **Quick Exploration Chips**: High-intent filters ("Budget Gear <₱200", "UST Verified Gear", "Top Rated 4.5★+").
+  - Varied font typography hierarchy: modern bold titles (`largeTitle`), clean uppercase tracked category metadata (`overline`), and vibrant high-contrast badges.
+- **Tiggy's Autonomous 30s Speech Cloud Dialogue**:
+  - Transformed `src/components/shared/GreetingHeader.tsx` from click-to-open into an autonomous dialogue assistant.
+  - Tiggy automatically pops out a dialogue speech cloud every 30 seconds with tips on how to use the app and campus rental advice.
+  - Designed a connected speech cloud bubble featuring a comic tail (`transform: [{ rotate: '45deg' }]`) pointing directly to Tiggy's mouth on the right side of the header.
+  - Included a subtle dismiss button (`X`) and polite screen-reader accessibility (`accessibilityLiveRegion="polite"`), with zero manual clicking required.
+- **Checks**: `npx tsc --noEmit` pass (0 errors). Dev server running cleanly on Metro.
+
+### 2026-11-20: Profile Tab Role Switch Navigation Fix
+- **Issue**: Clicking "Lending" in the Profile tab while in borrower mode navigated to `/lender` (Lender Dashboard) instead of staying in the Profile tab.
+- **Fix**:
+  - Enhanced `RoleSwitcher` (`src/features/auth/RoleSwitcher.tsx`) to inspect active route segments (`useSegments()`, `usePathname()`) and accept an explicit `screen` prop.
+  - When switching roles from `profile` or `messages`, the switcher now preserves the active screen in the destination role area (e.g. `/borrower/profile` → `/lender/profile`).
+  - Updated `ProfileScreen.tsx` to pass `screen="profile"` and updated `enableRole` redirect.
+  - Updated `src/test/navigation/guards.test.tsx` expectation.
+- **Checks**: `npx tsc --noEmit` pass (0 errors).
+
+### 2026-11-20: Creative Multi-Tab Enhancements & Spatial Polish
+- **Smooth Automated Spotlight Transitions**:
+  - Implemented `Animated.View` entering/exiting transitions with cubic easing and animated progress pill indicators in `src/app/borrower/index.tsx`.
+- **Tiggy Head Speech Cloud Positioning**:
+  - Positioned dialogue speech cloud directly above Tiggy's head in `src/components/shared/GreetingHeader.tsx` (`bottom: 96, right: -8`) with comic tail pointing down into the head.
+- **Rentals Tab Modernization & Spacing**:
+  - Completely redesigned `src/app/borrower/rentals.tsx` with elevated rental cards, gold package icon badges, timeline date pill, price breakdown, urgency alert, and icons on filter chips.
+  - Separated the guarantee banner with generous `spacing.xxl` (32px) top margin to fix the crowding issue.
+- **Messages & Profile Tabs**:
+  - Modernized `src/features/messages/ConversationList.tsx` with student conversation cards, avatar circles with initials, and unread badges.
+  - Added Student Identity Hero Card in `src/features/profile/ProfileScreen.tsx` with gold-ringed avatar and verification status.
+- **Equipment Tab Polish**:
+  - Upgraded `src/app/lender/equipment.tsx` with distinct elevated cards and rounded photo thumbnails.
+- **Full Upper Header Redesign & Bounded Tiggy Dialogue**:
+  - Replaced artificial pills and floating text with a personalized student top bar (Avatar initials + `Hi, {Name} 👋` + UST Manila status).
+  - Placed the dialogue bubble safely inside the horizontal mascot hero row to guarantee it is never cut on top.
+  - Connected the right-facing speech tail (`tailRight`) directly into Tiggy's raised waving hand.
+  - Added an interactive campus prompt card when the tip is closed so the upper-left is always active and never empty.
+- **Lender Dashboard Handovers Card Fix**:
+  - Simplified metric label in `src/app/lender/index.tsx` from `'Handovers (7 days)'` to `'Handovers'`.
+  - Added centered label alignment in `src/components/shared/Layout.tsx` to eliminate cut-off parentheses and text truncation.
+- **Profile Tab Strategic Redesign & Redundancy Elimination**:
+  - Cleaned `ScreenHeader` to remove duplicate student name and email.
+  - Added in-place name editing pencil in `studentHeroCard`, eliminating duplicate "Edit name" row.
+  - Made student verification badge interactive with direct link to `/onboarding/status`, eliminating duplicate "Verification status" row.
+  - Removed redundant static "Roles" list; replaced with contextual `unlockRoleCard` when `missingRole` is present.
+  - Segmented account options into cohesive "Activity & feedback" and "Support & policies" groups.
+- **Tab Switch Content Displacement & Top Inset Fix**:
+  - Added `contentInsetAdjustmentBehavior="never"` and `automaticallyAdjustContentInsets={false}` on `Screen.tsx` to prevent iOS UIKit from injecting double insets on tab switch.
+  - Replaced `<SafeAreaView>` with direct `useSafeAreaInsets()` `{ paddingTop: insets.top, ... }` padding to ensure rock-solid, zero-jump layout bounds.
+  - Provided `initialMetrics={initialWindowMetrics}` to root `<SafeAreaProvider>`.
+- **Verification Status Tiggy Enlargement**:
+  - Added `xl: 220` size specification to `Tiggy.tsx`.
+  - Upgraded Tiggy on `/onboarding/status` from `size="sm"` (`72px`) to `size="xl"` (`220px`) with animated greeting wave and contextual tips for all statuses.
+- **Removed Developer Route Map**:
+  - Removed "Developer route map" button from `src/app/(auth)/welcome.tsx` footer.
+  - Removed `src/app/dev/index.tsx` route map screen.
+- **Checks**: `npx tsc --noEmit` pass (0 errors).

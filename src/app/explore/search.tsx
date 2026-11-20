@@ -1,7 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Award, Search, SearchX, SlidersHorizontal, X } from 'lucide-react-native';
+import {
+  ArrowUpDown,
+  Award,
+  Calculator,
+  Camera,
+  ChevronDown,
+  FlaskConical,
+  Laptop,
+  Package,
+  Plug,
+  Ruler,
+  Search,
+  SearchX,
+  SlidersHorizontal,
+  Sparkles,
+  Tv,
+  X,
+} from 'lucide-react-native';
 import {
   Banner,
   Button,
@@ -9,6 +26,8 @@ import {
   DateField,
   EmptyState,
   ErrorState,
+  Icon,
+  ListRow,
   LoadingRows,
   Screen,
   ScreenHeader,
@@ -16,6 +35,7 @@ import {
   Sheet,
   Text,
   TextField,
+  type IconComponent,
 } from '@/components/design-system';
 import type { ItemCondition } from '@/domain/entities';
 import { CONDITIONS } from '@/domain/listings';
@@ -25,9 +45,20 @@ import { useListingPhotos } from '@/features/listings/useListingPhotos';
 import { addDays, todayInBusinessTz } from '@/lib/dates';
 import { useAsync } from '@/lib/use-async';
 import { discoveryRepository } from '@/repositories';
-import { colors, spacing } from '@/theme';
+import { colors, radii, spacing } from '@/theme';
 
 const RATINGS = [{ value: 4.5, label: '4.5★ & up' }, { value: 4, label: '4★ & up' }, { value: 3, label: '3★ & up' }];
+
+const CATEGORY_ICONS: Record<string, IconComponent> = {
+  calculators: Calculator,
+  'photo-video': Camera,
+  'laptop-accessories': Laptop,
+  presentation: Tv,
+  drafting: Ruler,
+  'lab-gear': FlaskConical,
+  'power-cables': Plug,
+  other: Package,
+};
 
 /** Borrower search with filters and sorting (plan Phase 7, Journey C.2–C.3). */
 export default function SearchScreen() {
@@ -35,6 +66,7 @@ export default function SearchScreen() {
   const [filters, setFilters] = useState<SearchFilters>({ ...EMPTY_FILTERS, query: params.q ?? '', category: params.category || null }); // empty param = no category
   const [typed, setTyped] = useState(filters.query);
   const [sheet, setSheet] = useState(false);
+  const [sortSheet, setSortSheet] = useState(false);
   const [draft, setDraft] = useState<SearchFilters>(filters);
   const today = todayInBusinessTz();
 
@@ -51,6 +83,7 @@ export default function SearchScreen() {
   const datesChosen = filters.pickup !== null && filters.ret !== null;
   const draftPrice = priceRange(draft);
   const categoryLabel = useMemo(() => categories.data?.find((c) => c.value === filters.category)?.label, [categories.data, filters.category]);
+  const activeSort = useMemo(() => SORT_OPTIONS.find((s) => s.value === filters.sort), [filters.sort]);
 
   const applyDraft = () => {
     if (draftPrice.problem) return;
@@ -70,30 +103,65 @@ export default function SearchScreen() {
     <Screen refreshing={results.loading && Boolean(results.data)} onRefresh={results.reload}>
       <ScreenHeader title="Find equipment" size="compact" back />
       <TextField
-        label="Search"
+        label="Search equipment"
+        hideLabel
         leadingIcon={Search}
         value={typed}
         onChangeText={setTyped}
         placeholder="Calculator, camera, projector…"
         returnKeyType="search"
         autoFocus={!params.category}
-        trailing={typed ? <Button label="Clear search" variant="ghost" size="sm" icon={X} onPress={() => setTyped('')} /> : undefined}
+        trailing={typed ? <Button label="Clear" variant="ghost" size="sm" icon={X} onPress={() => setTyped('')} /> : undefined}
       />
 
       <View style={styles.toolbar}>
-        <Button label={count ? `Filters (${count})` : 'Filters'} variant={count ? 'tonal' : 'secondary'} size="sm" icon={SlidersHorizontal} onPress={() => { setDraft(filters); setSheet(true); }} testID="open-filters" />
-        {count ? <Button label="Clear all" variant="ghost" size="sm" onPress={clearAll} testID="clear-filters" /> : null}
-        <View style={styles.flex} />
-        <View style={styles.sort}>
-          <SelectField label="Sort" value={filters.sort} onChange={(sort) => setFilters((f) => ({ ...f, sort }))} options={SORT_OPTIONS} />
+        <View style={styles.toolbarLeft}>
+          <Button
+            label={count ? `Filters (${count})` : 'Filters'}
+            variant={count ? 'tonal' : 'secondary'}
+            size="sm"
+            icon={SlidersHorizontal}
+            onPress={() => { setDraft(filters); setSheet(true); }}
+            testID="open-filters"
+          />
+          {count ? <Button label="Clear all" variant="ghost" size="sm" onPress={clearAll} testID="clear-filters" /> : null}
         </View>
+
+        <Pressable
+          onPress={() => setSortSheet(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Sort by: ${activeSort?.label ?? 'Featured first'}`}
+          style={({ pressed }) => [
+            styles.sortTrigger,
+            pressed && styles.sortTriggerPressed,
+          ]}
+          testID="open-sort"
+        >
+          <Icon as={ArrowUpDown} size={15} color={colors.primaryPressed} />
+          <Text variant="subhead" style={styles.sortLabel} numberOfLines={1}>
+            {activeSort?.label ?? 'Featured first'}
+          </Text>
+          <Icon as={ChevronDown} size={15} color={colors.textMuted} />
+        </Pressable>
       </View>
 
       {categories.data ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          <Chip label="All" selected={filters.category === null} onPress={() => setFilters((f) => ({ ...f, category: null }))} />
+          <Chip
+            label="All"
+            icon={Sparkles}
+            selected={filters.category === null}
+            onPress={() => setFilters((f) => ({ ...f, category: null }))}
+          />
           {categories.data.map((c) => (
-            <Chip key={c.value} label={c.label} selected={filters.category === c.value} onPress={() => setFilters((f) => ({ ...f, category: f.category === c.value ? null : c.value }))} testID={`category-${c.value}`} />
+            <Chip
+              key={c.value}
+              label={c.label}
+              icon={CATEGORY_ICONS[c.value] ?? Package}
+              selected={filters.category === c.value}
+              onPress={() => setFilters((f) => ({ ...f, category: f.category === c.value ? null : c.value }))}
+              testID={`category-${c.value}`}
+            />
           ))}
         </ScrollView>
       ) : null}
@@ -111,9 +179,20 @@ export default function SearchScreen() {
         />
       ) : (
         <View style={styles.results}>
-          <Text variant="footnote" tone="muted" accessibilityLiveRegion="polite">
-            {results.data.total} item{results.data.total === 1 ? '' : 's'}{categoryLabel ? ` in ${categoryLabel}` : ''}{datesChosen ? ' available for your dates' : ''}
-          </Text>
+          <View style={styles.resultsHeader}>
+            <View style={styles.resultsCountBadge}>
+              <Icon as={Sparkles} size={13} color={colors.primaryPressed} />
+              <Text variant="footnote" style={styles.resultsCountText} accessibilityLiveRegion="polite">
+                {results.data.total} {results.data.total === 1 ? 'item' : 'items'}
+                {categoryLabel ? ` in ${categoryLabel}` : ''}
+              </Text>
+            </View>
+            {datesChosen ? (
+              <View style={styles.datePill}>
+                <Text variant="caption" style={styles.datePillText}>Free on your dates</Text>
+              </View>
+            ) : null}
+          </View>
           {results.data.rows.map((r) => (
             <ResultRow
               key={r.id}
@@ -126,6 +205,28 @@ export default function SearchScreen() {
         </View>
       )}
 
+      {/* Sort Sheet */}
+      <Sheet
+        visible={sortSheet}
+        onClose={() => setSortSheet(false)}
+        title="Sort equipment"
+      >
+        <View style={styles.sheetBody}>
+          {SORT_OPTIONS.map((o) => (
+            <ListRow
+              key={o.value}
+              title={o.label}
+              selected={o.value === filters.sort}
+              onPress={() => {
+                setFilters((f) => ({ ...f, sort: o.value }));
+                setSortSheet(false);
+              }}
+            />
+          ))}
+        </View>
+      </Sheet>
+
+      {/* Filter Sheet */}
       <Sheet
         visible={sheet}
         onClose={() => setSheet(false)}
@@ -172,10 +273,64 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  toolbar: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, marginTop: spacing.md },
-  sort: { width: 190 },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  toolbarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
+  sortTrigger: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+  },
+  sortTriggerPressed: {
+    backgroundColor: colors.surfaceSunken,
+  },
+  sortLabel: {
+    fontWeight: '600',
+    color: colors.text,
+  },
   chips: { gap: spacing.sm, paddingVertical: spacing.md },
   results: { gap: spacing.md },
+  resultsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  resultsCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  resultsCountText: {
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  datePill: {
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+  },
+  datePillText: {
+    color: colors.success,
+    fontWeight: '600',
+  },
   sheetBody: { gap: spacing.md },
   sheetActions: { flexDirection: 'row', gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm },

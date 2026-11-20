@@ -39,7 +39,7 @@ export function StatRow({ stats }: { stats: Stat[] }) {
         const body = (
           <>
             <Text variant="title" maxFontSizeMultiplier={maxFontScale.dense} style={{ color }}>{String(s.value)}</Text>
-            <Text variant="caption" tone="muted" maxFontSizeMultiplier={maxFontScale.dense} numberOfLines={2}>{s.label}</Text>
+            <Text variant="caption" tone="muted" maxFontSizeMultiplier={maxFontScale.dense} numberOfLines={2} style={styles.statLabel}>{s.label}</Text>
           </>
         );
         return (
@@ -68,5 +68,6 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radii.lg, paddingVertical: spacing.md },
   stat: { flex: 1 },
   statDivider: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: colors.border },
-  statPress: { alignItems: 'center', gap: 2, paddingHorizontal: spacing.xs, minHeight: 44, justifyContent: 'center' },
+  statPress: { alignItems: 'center', gap: 2, paddingHorizontal: 2, minHeight: 44, justifyContent: 'center' },
+  statLabel: { textAlign: 'center', fontSize: 11, fontWeight: '600' },
 });

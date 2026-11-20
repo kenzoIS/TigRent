@@ -56,7 +56,7 @@ export default function LenderDashboard() {
             <StatRow
               stats={[
                 { label: 'New requests', value: d.pendingRequests.length, onPress: () => router.navigate('/lender/requests'), tone: d.pendingRequests.length ? 'warning' : 'default' },
-                { label: 'Handovers (7 days)', value: d.upcomingHandovers.length },
+                { label: 'Handovers', value: d.upcomingHandovers.length },
                 { label: 'Out on rent', value: d.inProgress.length },
                 { label: 'Overdue', value: d.overdue.length, tone: d.overdue.length ? 'danger' : 'default' },
               ]}

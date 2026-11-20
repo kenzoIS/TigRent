@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { CircleCheck, CircleExclamationPoint, Info, TriangleExclamationPoint, X } from 'lucide-react-native';
+import { CircleCheck, CircleExclamationPoint, Info, Sparkles, TriangleExclamationPoint, X } from 'lucide-react-native';
 import { colors, radii, spacing, touchTarget } from '@/theme';
 import { Icon, type IconComponent } from './Icon';
 import { Text } from './Text';
 
-export type Tone = 'info' | 'success' | 'warning' | 'danger' | 'neutral';
+export type Tone = 'info' | 'success' | 'warning' | 'danger' | 'neutral' | 'gold';
 
 export const toneColors: Record<Tone, { bg: string; fg: string; icon: IconComponent }> = {
   info: { bg: colors.infoSoft, fg: colors.info, icon: Info },
@@ -12,6 +12,7 @@ export const toneColors: Record<Tone, { bg: string; fg: string; icon: IconCompon
   warning: { bg: colors.warningSoft, fg: colors.warning, icon: TriangleExclamationPoint },
   danger: { bg: colors.dangerSoft, fg: colors.danger, icon: CircleExclamationPoint },
   neutral: { bg: colors.surfaceSunken, fg: colors.textMuted, icon: Info },
+  gold: { bg: colors.primarySoft, fg: colors.primaryPressed, icon: Sparkles },
 };
 
 type BannerProps = {

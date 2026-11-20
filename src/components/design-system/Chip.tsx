@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, maxFontScale, radii, spacing } from '@/theme';
+import { colors, elevation, maxFontScale, radii, spacing } from '@/theme';
 import { toneColors, type Tone } from './Banner';
 import { Icon, type IconComponent } from './Icon';
 import { Text } from './Text';
@@ -13,7 +13,7 @@ type ChipProps = {
   testID?: string;
 };
 
-/** Toggleable filter/choice chip. */
+/** Toggleable filter/choice chip with lively UST tiger gold selection. */
 export function Chip({ label, selected = false, onPress, icon, disabled, testID }: ChipProps) {
   return (
     <Pressable
@@ -26,15 +26,16 @@ export function Chip({ label, selected = false, onPress, icon, disabled, testID 
       hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => [
         styles.chip,
+        selected && elevation.low,
         {
-          backgroundColor: selected ? colors.ink : pressed ? colors.surfaceSunken : colors.surface,
-          borderColor: selected ? colors.ink : colors.border,
+          backgroundColor: selected ? colors.primary : pressed ? colors.surfaceSunken : colors.surface,
+          borderColor: selected ? colors.primaryPressed : colors.border,
           opacity: disabled ? 0.5 : 1,
         },
       ]}
     >
-      {icon ? <Icon as={icon} size="sm" color={selected ? colors.textOnInk : colors.text} /> : null}
-      <Text variant="subhead" maxFontSizeMultiplier={maxFontScale.control} style={{ color: selected ? colors.textOnInk : colors.text, fontWeight: '500' }}>
+      {icon ? <Icon as={icon} size="sm" color={selected ? colors.ink : colors.textMuted} /> : null}
+      <Text variant="subhead" maxFontSizeMultiplier={maxFontScale.control} style={{ color: selected ? colors.ink : colors.text, fontWeight: selected ? '700' : '500' }}>
         {label}
       </Text>
     </Pressable>

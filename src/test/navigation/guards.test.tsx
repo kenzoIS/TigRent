@@ -83,7 +83,7 @@ describe('role areas (plan §2.1)', () => {
     await renderRouter(APP_DIR, { initialUrl: '/borrower/profile' });
     await user.press(await screen.findByRole('tab', { name: 'Lending' }));
     expect(setActiveRole).toHaveBeenCalledWith('lender');
-    expect(screen).toHavePathname('/lender');
+    expect(screen).toHavePathname('/lender/profile');
 
     use(signedIn({ roles: ['borrower'] }));
     await renderRouter(APP_DIR, { initialUrl: '/borrower/profile' });

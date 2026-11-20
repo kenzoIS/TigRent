@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/shared/AmbientBackground';
 import { colors, gutter, spacing } from '@/theme';
 
@@ -28,7 +28,6 @@ type ScreenProps = {
 export function Screen({ children, scroll = true, background = 'plain', withTabBar, footer, padded = true, contentStyle, refreshing, onRefresh, testID }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const bottomSpace = withTabBar ? TAB_BAR_HEIGHT + TAB_BAR_MARGIN * 2 + insets.bottom : footer ? spacing.md : insets.bottom + spacing.xl;
-  const edges: Edge[] = withTabBar || footer ? ['top', 'left', 'right'] : ['top', 'left', 'right'];
   const bg = background === 'surface' ? colors.surface : colors.background;
 
   const body = scroll ? (
@@ -38,6 +37,8 @@ export function Screen({ children, scroll = true, background = 'plain', withTabB
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
       refreshControl={onRefresh ? <RefreshControl refreshing={Boolean(refreshing)} onRefresh={onRefresh} tintColor={colors.link} colors={[colors.link]} /> : undefined}
     >
       {children}
@@ -49,14 +50,14 @@ export function Screen({ children, scroll = true, background = 'plain', withTabB
   return (
     <View style={[styles.flex, { backgroundColor: bg }]} testID={testID}>
       {background === 'ambient' ? <AmbientBackground /> : null}
-      <SafeAreaView style={styles.flex} edges={edges}>
+      <View style={[styles.flex, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           {body}
           {footer ? (
             <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>{footer}</View>
           ) : null}
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

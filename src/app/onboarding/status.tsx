@@ -11,15 +11,25 @@ import { studentVerificationProvider } from '@/providers/student-verification/ma
 import { verificationRepository } from '@/repositories';
 import { colors, radii, spacing } from '@/theme';
 
-const COPY: Record<VerificationStatus, { title: string; body: string; tone: Tone; tip?: string }> = {
-  not_submitted: { title: 'Not submitted yet', body: 'Submit your details and registration form to start.', tone: 'neutral' },
+const COPY: Record<VerificationStatus, { title: string; body: string; tone: Tone; tip: string }> = {
+  not_submitted: {
+    title: 'Not submitted yet',
+    body: 'Submit your details and registration form to start.',
+    tone: 'neutral',
+    tip: 'Submit your student registration form to start borrowing and lending gear on campus!',
+  },
   pending_review: {
     title: 'Waiting for review',
     body: 'A TigRent reviewer will check your details. You can’t rent or lend until you’re verified.',
     tone: 'warning',
     tip: 'Your verification is waiting for review. I’ll let you know when there’s a decision.',
   },
-  verified: { title: 'You’re verified', body: 'Your student status was approved for this academic year.', tone: 'success' },
+  verified: {
+    title: 'You’re verified',
+    body: 'Your student status was approved for this academic year.',
+    tone: 'success',
+    tip: 'You’re officially verified! Enjoy renting and lending gear safely across UST Manila.',
+  },
   rejected: {
     title: 'Not approved',
     body: 'Your submission wasn’t approved. Read the reason, then submit again with the right document.',
@@ -72,7 +82,9 @@ export default function VerificationStatusScreen() {
     >
       <ScreenHeader title="Verification status" />
       <View style={styles.body}>
-        {copy.tip ? <Tiggy size="sm" message={copy.tip} /> : null}
+        <View style={styles.mascotHero}>
+          <Tiggy size="xl" wave message={copy.tip} />
+        </View>
         <View style={styles.card}>
           <StatusPill label={copy.title} tone={copy.tone} />
           <Text variant="callout">{copy.body}</Text>
@@ -113,6 +125,11 @@ export default function VerificationStatusScreen() {
 
 const styles = StyleSheet.create({
   body: { gap: spacing.lg },
+  mascotHero: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+  },
   card: { backgroundColor: colors.surface, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md },
   section: { gap: spacing.sm },
   list: { backgroundColor: colors.surface, borderRadius: radii.lg, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },

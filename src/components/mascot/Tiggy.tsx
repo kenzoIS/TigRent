@@ -26,7 +26,7 @@ import { colors, elevation, radii, spacing } from '@/theme';
 const TIGGY = require('@assets/mascot/tiggy.png');
 const ASPECT = 484 / 475;
 
-const SIZES = { sm: 72, md: 120, header: 132, lg: 188 } as const;
+const SIZES = { sm: 72, md: 120, header: 132, lg: 188, xl: 220 } as const;
 
 export type TiggyProps = {
   size?: keyof typeof SIZES;

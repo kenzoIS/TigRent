@@ -21,9 +21,6 @@ export default function Welcome() {
         <>
           <Button label="Create account" onPress={() => router.push('/sign-up')} fullWidth testID="welcome-create" />
           <Button label="I already have an account" variant="ghost" onPress={() => router.push('/sign-in')} fullWidth testID="welcome-signin" />
-          {__DEV__ ? (
-            <Button label="Developer route map" variant="ghost" size="sm" onPress={() => router.push('/dev')} fullWidth />
-          ) : null}
         </>
       }
     >

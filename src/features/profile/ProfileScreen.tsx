@@ -1,7 +1,21 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Award, Bell, BookOpen, Check, LogOut, Pencil, Settings, ShieldCheck, ShieldExclamationPoint, Star, Store, User, X } from 'lucide-react-native';
+import {
+  Award,
+  Bell,
+  BookOpen,
+  Check,
+  LogOut,
+  Pencil,
+  Settings,
+  ShieldCheck,
+  ShieldExclamationPoint,
+  Star,
+  Store,
+  UserCheck,
+  X,
+} from 'lucide-react-native';
 import {
   Banner,
   Button,
@@ -26,7 +40,7 @@ import { useSession } from '@/features/auth/session';
 import { fullNameSchema } from '@/features/auth/validation';
 import { useAsync } from '@/lib/use-async';
 import { notificationInboxRepository, profilesRepository, profileSummaryRepository, sessionRepository } from '@/repositories';
-import { colors, spacing } from '@/theme';
+import { colors, elevation, radii, spacing } from '@/theme';
 
 const VERIFICATION: Record<VerificationStatus, { label: string; tone: Tone }> = {
   verified: { label: 'Student verified', tone: 'success' },
@@ -89,7 +103,7 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
     applyContext(r.data);
     setEnabling(null);
     toast.show({ title: role === 'lender' ? 'Lending enabled' : 'Borrowing enabled', message: 'Use the switcher to move between borrowing and lending.', tone: 'success' });
-    router.navigate(role === 'lender' ? '/lender' : '/borrower');
+    router.navigate(role === 'lender' ? '/lender/profile' : '/borrower/profile');
   };
 
   const saveName = async () => {
@@ -107,17 +121,112 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
 
   return (
     <Screen withTabBar refreshing={summary.loading && Boolean(s)} onRefresh={reload}>
-      <ScreenHeader title={context.fullName || 'Your profile'} eyebrow={area === 'lender' ? 'Lending' : 'Borrowing'} subtitle={email ?? undefined} />
+      <ScreenHeader
+        title="Profile"
+        eyebrow={area === 'lender' ? 'Lending Mode' : 'Borrowing Mode'}
+        right={
+          <Pressable
+            onPress={() => router.navigate('/settings')}
+            accessibilityRole="button"
+            accessibilityLabel="Settings and preferences"
+            hitSlop={8}
+            style={styles.settingsHeaderBtn}
+          >
+            <Icon as={Settings} size={20} color={colors.textMuted} />
+          </Pressable>
+        }
+      />
       <View style={styles.body}>
-        <RoleSwitcher current={area} />
-
-        <View style={styles.pills}>
-          <StatusPill label={v.label} tone={v.tone} icon={verified ? ShieldCheck : undefined} />
-          {s?.badges.some((b) => b.code === 'trusted_lender') ? <StatusPill label="Verified Trusted Lender" tone="success" icon={Award} /> : null}
-          {context.roles.filter((r) => r === 'borrower' || r === 'lender').map((r) => (
-            <StatusPill key={r} label={r === 'borrower' ? 'Borrower' : 'Lender'} />
-          ))}
+        {/* Student Identity Hero Card (Unified, Non-Redundant, In-Place Editing) */}
+        <View style={[styles.studentHeroCard, elevation.low]}>
+          <View style={styles.avatarRing}>
+            <Text style={styles.avatarText}>
+              {(context.fullName || 'Student')
+                .split(' ')
+                .map((n) => n[0])
+                .filter(Boolean)
+                .slice(0, 2)
+                .join('')
+                .toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.studentInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.studentName} numberOfLines={1}>
+                {context.fullName || 'UST Student'}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setName(context.fullName);
+                  setNameError(null);
+                  setEditing(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Edit full name"
+                hitSlop={8}
+                style={styles.editPencilBtn}
+              >
+                <Icon as={Pencil} size={14} color={colors.primaryPressed} />
+              </Pressable>
+            </View>
+            <Text style={styles.studentEmail} numberOfLines={1}>
+              {email ?? 'UST Manila Verified Account'}
+            </Text>
+            <View style={styles.pills}>
+              <Pressable
+                onPress={() => router.navigate('/onboarding/status')}
+                accessibilityRole="button"
+                accessibilityLabel={`Verification status: ${v.label}. Tap to view details.`}
+              >
+                <StatusPill label={v.label} tone={v.tone} icon={verified ? ShieldCheck : undefined} />
+              </Pressable>
+              {s?.badges.some((b) => b.code === 'trusted_lender') ? (
+                <StatusPill label="Verified Trusted Lender" tone="success" icon={Award} />
+              ) : null}
+            </View>
+          </View>
         </View>
+
+        {/* Role Switcher */}
+        <RoleSwitcher current={area} screen="profile" />
+
+        {/* Unlock Missing Role Card (Only displayed if role is missing — replaces redundant static list) */}
+        {missingRole ? (
+          <View style={[styles.unlockRoleCard, elevation.low]}>
+            <View style={styles.unlockRoleHeader}>
+              <View style={styles.unlockRoleIcon}>
+                <Icon as={missingRole === 'lender' ? Store : UserCheck} size={18} color={colors.primaryPressed} />
+              </View>
+              <View style={styles.unlockRoleContent}>
+                <Text style={styles.unlockRoleTitle}>
+                  {missingRole === 'lender' ? 'Unlock Lending on Campus' : 'Unlock Borrowing on Campus'}
+                </Text>
+                <Text style={styles.unlockRoleSubtitle}>
+                  {missingRole === 'lender'
+                    ? 'Earn extra allowance by listing your calculators, cameras & gear.'
+                    : 'Rent items from verified UST students for your classes & projects.'}
+                </Text>
+              </View>
+            </View>
+            {enableError ? (
+              <Banner tone="danger" title="Couldn’t enable role" message={enableError} onDismiss={() => setEnableError(null)} />
+            ) : null}
+            <Button
+              label={missingRole === 'lender' ? 'Start lending too' : 'Start borrowing too'}
+              variant="tonal"
+              onPress={() => setEnabling(missingRole)}
+              disabled={!verified || restricted}
+              disabledReason={
+                !verified
+                  ? 'Available once your student verification is approved.'
+                  : restricted
+                  ? 'New roles can’t be enabled while your account is under review.'
+                  : undefined
+              }
+              testID="enable-role"
+            />
+          </View>
+        ) : null}
 
         {restricted ? (
           <Banner
@@ -128,13 +237,14 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
           />
         ) : null}
 
+        {/* Reputation & History Bento */}
         {summary.error ? (
           <ErrorState offline={summary.error.kind === 'network'} message={summary.error.message} onRetry={reload} />
         ) : !s ? (
-          <LoadingRows rows={2} label="Loading profile" />
+          <LoadingRows rows={2} label="Loading reputation" />
         ) : (
           <>
-            <Section title="Ratings & history" action={{ label: 'About badges', onPress: () => setBadgeInfo(true) }}>
+            <Section title="Reputation & badges" action={{ label: 'About badges', onPress: () => setBadgeInfo(true) }}>
               <StatRow
                 stats={[
                   { label: `As lender (${s.lenderRating.count})`, value: stars(s.lenderRating.avg, s.lenderRating.count) },
@@ -147,37 +257,60 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
           </>
         )}
 
-        <Section title="Roles">
+        {/* Activity & Feedback */}
+        <Section title="Activity & feedback">
           <Group>
-            <ListRow icon={User} title="Borrowing" subtitle="Rent equipment from other students" trailing={<RoleState on={context.roles.includes('borrower')} />} />
-            <ListRow icon={Store} title="Lending" subtitle="List your equipment and set your own rates" trailing={<RoleState on={context.roles.includes('lender')} />} />
-          </Group>
-          {enableError ? <Banner tone="danger" title="Couldn’t enable the role" message={enableError} onDismiss={() => setEnableError(null)} /> : null}
-          {missingRole ? (
-            <Button
-              label={missingRole === 'lender' ? 'Start lending too' : 'Start borrowing too'}
-              variant="tonal"
-              onPress={() => setEnabling(missingRole)}
-              disabled={!verified || restricted}
-              disabledReason={!verified ? 'Available once your student verification is approved.' : restricted ? 'New roles can’t be enabled while your account is under review.' : undefined}
-              testID="enable-role"
+            <ListRow
+              icon={Star}
+              title="My reviews"
+              subtitle="Ratings you received and rentals to rate"
+              onPress={() => router.navigate('/reviews')}
+              testID="my-reviews"
             />
-          ) : null}
-        </Section>
-
-        <Section title="Account">
-          <Group>
-            <ListRow icon={Pencil} title="Edit name" value={context.fullName} onPress={() => { setName(context.fullName); setNameError(null); setEditing(true); }} />
-            <ListRow icon={ShieldCheck} title="Verification status" value={v.label} onPress={() => router.navigate('/onboarding/status')} />
-            <ListRow icon={Star} title="My reviews" subtitle="Ratings you received and rentals to rate" onPress={() => router.navigate('/reviews')} testID="my-reviews" />
-            {restricted ? <ListRow icon={ShieldExclamationPoint} title="Account status" onPress={() => router.navigate('/restricted')} /> : null}
-            <ListRow icon={Bell} title="Notifications" value={unread > 0 ? `${unread} unread` : undefined} onPress={() => router.navigate('/notifications')} />
-            <ListRow icon={Settings} title="Settings & help" onPress={() => router.navigate('/settings')} />
-            <ListRow icon={BookOpen} title="Terms & policies" onPress={() => router.navigate('/policies')} />
+            <ListRow
+              icon={Bell}
+              title="Notifications"
+              subtitle={unread > 0 ? `${unread} unread updates` : 'All caught up'}
+              value={unread > 0 ? `${unread} unread` : undefined}
+              onPress={() => router.navigate('/notifications')}
+            />
           </Group>
         </Section>
 
-        <Button label="Sign out" variant="secondary" icon={LogOut} onPress={() => setConfirmOut(true)} testID="account-sign-out" style={styles.signOut} />
+        {/* Support & Preferences */}
+        <Section title="Support & policies">
+          <Group>
+            <ListRow
+              icon={Settings}
+              title="Settings & help"
+              subtitle="Display preferences, FAQs & student support"
+              onPress={() => router.navigate('/settings')}
+            />
+            <ListRow
+              icon={BookOpen}
+              title="Terms & policies"
+              subtitle="Community rules & rental agreements"
+              onPress={() => router.navigate('/policies')}
+            />
+            {restricted ? (
+              <ListRow
+                icon={ShieldExclamationPoint}
+                title="Account status"
+                subtitle="Account under review"
+                onPress={() => router.navigate('/restricted')}
+              />
+            ) : null}
+          </Group>
+        </Section>
+
+        <Button
+          label="Sign out"
+          variant="secondary"
+          icon={LogOut}
+          onPress={() => setConfirmOut(true)}
+          testID="account-sign-out"
+          style={styles.signOut}
+        />
       </View>
 
       <Dialog
@@ -194,7 +327,7 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
         onCancel={() => setEnabling(null)}
         testID="enable-role-dialog"
       />
-      <Sheet visible={editing} onClose={() => setEditing(false)} title="Edit name" footer={<Button label="Save" onPress={saveName} loading={savingName} fullWidth />}>
+      <Sheet visible={editing} onClose={() => setEditing(false)} title="Edit full name" footer={<Button label="Save" onPress={saveName} loading={savingName} fullWidth />}>
         <TextField label="Full name" value={name} onChangeText={setName} error={nameError} autoComplete="name" />
       </Sheet>
       <Dialog
@@ -210,10 +343,6 @@ export function ProfileScreen({ area }: { area: MarketplaceRole }) {
       />
     </Screen>
   );
-}
-
-function RoleState({ on }: { on: boolean }) {
-  return <StatusPill label={on ? 'On' : 'Off'} tone={on ? 'success' : 'neutral'} />;
 }
 
 function Criterion({ ok: met, label }: { ok: boolean; label: string }) {
@@ -251,11 +380,106 @@ function BadgeSheet({ visible, onClose, summary: s }: { visible: boolean; onClos
 
 const styles = StyleSheet.create({
   body: { gap: spacing.md },
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  signOut: { marginTop: spacing.xl },
+  settingsHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  studentHeroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  avatarRing: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 2.5,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.ink,
+  },
+  studentInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  studentName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  editPencilBtn: {
+    padding: 3,
+    borderRadius: 4,
+  },
+  studentEmail: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  unlockRoleCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.primarySoft,
+  },
+  unlockRoleHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  unlockRoleIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unlockRoleContent: {
+    flex: 1,
+    gap: 2,
+  },
+  unlockRoleTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  unlockRoleSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 16,
+  },
+  signOut: { marginTop: spacing.md },
   criterion: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   flex: { flex: 1 },
   sheetBody: { gap: spacing.sm },
   mt: { marginTop: spacing.md },
 });
+
 

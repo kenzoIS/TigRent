@@ -7,6 +7,7 @@ import { Text } from './Text';
 
 export type TextFieldProps = Omit<TextInputProps, 'style' | 'editable'> & {
   label: string;
+  hideLabel?: boolean;
   error?: string | null;
   helper?: string;
   required?: boolean;
@@ -19,17 +20,19 @@ export type TextFieldProps = Omit<TextInputProps, 'style' | 'editable'> & {
 
 export type TextFieldHandle = ComponentRef<typeof TextInput>;
 
-export function TextField({ label, error, helper, required, disabled, leadingIcon, trailing, multiline, onFocus, onBlur, ref, ...input }: TextFieldProps) {
+export function TextField({ label, hideLabel = false, error, helper, required, disabled, leadingIcon, trailing, multiline, onFocus, onBlur, ref, ...input }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
   const hasError = Boolean(error);
   const borderColor = hasError ? colors.danger : focused ? colors.focus : colors.border;
 
   return (
     <View style={styles.wrap}>
-      <Text variant="subhead" style={styles.label} nativeID={`${label}-label`}>
-        {label}
-        {required ? <Text variant="subhead" tone="muted">{'  '}Required</Text> : null}
-      </Text>
+      {!hideLabel ? (
+        <Text variant="subhead" style={styles.label} nativeID={`${label}-label`}>
+          {label}
+          {required ? <Text variant="subhead" tone="muted">{'  '}Required</Text> : null}
+        </Text>
+      ) : null}
       <View
         style={[
           styles.field,

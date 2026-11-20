@@ -65,11 +65,6 @@ describe('navigation shell', () => {
     expect(screen).toHavePathname('/welcome');
   });
 
-  it('dev route map is reachable in development', async () => {
-    await renderRouter(APP_DIR, { initialUrl: '/dev' });
-    expect(await screen.findByText('Route map')).toBeOnTheScreen();
-  });
-
   it('component gallery is reachable in development', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/dev/components' });
     expect(await screen.findByText('Components')).toBeOnTheScreen();

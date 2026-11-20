@@ -1,8 +1,9 @@
 // Minimal .env loader for tooling scripts (no dependency). Never logs secret values.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..', '..');
+export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export function loadEnv() {
   const file = path.join(ROOT, '.env');

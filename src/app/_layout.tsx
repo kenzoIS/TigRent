@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ToastProvider } from '@/components/design-system';
 import { ConfigErrorScreen } from '@/components/shared/ConfigErrorScreen';
 import { validateEnv } from '@/lib/env';
@@ -15,13 +15,13 @@ const envCheck = validateEnv();
 export default function RootLayout() {
   if (!envCheck.ok) {
     return (
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <ConfigErrorScreen issues={envCheck.issues} />
       </SafeAreaProvider>
     );
   }
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <MotionProvider>
         <SessionProvider>
           <ToastProvider>
