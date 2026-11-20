@@ -1,0 +1,36 @@
+# dependencies / build
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+*.tsbuildinfo
+
+# native
+ios/
+android/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# secrets: never commit
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# expo / metro extras
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.key
+*.pem
+.metro-health-check*

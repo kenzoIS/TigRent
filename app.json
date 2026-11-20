@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "TigRent",
+    "slug": "tigrent",
+    "scheme": "tigrent",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FBF7EE",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FBF7EE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "softwareKeyboardLayoutMode": "resize",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TigRent uses your photos so you can attach your registration form or item photos.",
+          "cameraPermission": "TigRent uses the camera so you can photograph your registration form or items."
+        }
+      ],
+      "expo-document-picker"
+    ]
+  }
+}
